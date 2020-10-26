@@ -1,4 +1,5 @@
 from Type import *
+import sys
 
 ### CONFIG ###
 FILE_PATH = "../input.txt"
@@ -74,11 +75,21 @@ def pretty_print(tokens):
             pretty_print(tokens)
 
 
+def repl():
+    while True:
+        expressions = input(">>> ")
+        tokens = tokenize(expressions)
+        transformed_tokens = transform(tokens, [])
+        print(f">>> {transformed_tokens}")
+
+
 if __name__ == "__main__":
-    expressions = read_file(filePath=FILE_PATH)
-    print("Tokenizing...")
-    tokens = tokenize(expressions)
-    print(tokens)
-    print("Transforming tokens...")
-    transformed_tokens = transform(tokens, [])
-    print(transformed_tokens)
+    arguments = sys.argv
+    if not arguments:
+        expressions = read_file(filePath=FILE_PATH)
+        tokens = tokenize(expressions)
+        print("Tokenizing")
+        transformed_tokens = transform(tokens, [])
+        print(transformed_tokens)
+    else:
+        repl()
