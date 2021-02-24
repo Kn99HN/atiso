@@ -6,11 +6,11 @@ class Context {
     this.scope = scope;
     this.parent = parent;
 
-    this.get = (identifier) => {
+    this.get = function(identifier) {
       if (identifier in this.scope) {
         return this.scope[identifier];
       } else if (this.parent !== undefined) {
-        return this.parent.get(undefined);
+        return this.parent.get(identifier);
       }
     };
   }
@@ -18,9 +18,12 @@ class Context {
 
 const tokenize = (input) => {
   // not currently working with space -> think about this more
+  console.log(input.replace(/\(/g, "(\t")
+  .replace(/\)/g, "\t)")
+  .replace(/(?<=")/g, "\t"))
   return input
-    .replace(/(?<=[(])/g, " ")
-    .replace(/(?=[)])/g, " ")
+    .replace(/\(/g, "( ")
+    .replace(/\)/g, " )")
     .split(" ");
 };
 
@@ -94,7 +97,7 @@ const parse = (input) => {
 };
 
 const library = {
-  "+": (args) => {
+  '+': (...args) => {
     return args.reduce((acc, curr) => acc + curr, 0);
   },
   first: (ls) => ls[0],
@@ -131,10 +134,12 @@ const interpretList = (inputs, context) => {
   if (inputs.length > 0 && inputs[0].value in special) {
     return special[inputs[0].value](inputs, context);
   } else {
-    const interpretedInputs = inputs.map((x) => interpret(x, context));
+    const interpretedInputs = inputs.map(function(x) {
+      return interpret(x, context);
+    });
     if (interpretedInputs[0] instanceof Function) {
       const func = interpretedInputs[0];
-      return func(interpretedInputs.slice(1));
+      return func(...interpretedInputs.slice(1));
     } else {
       return interpretedInputs;
     }
@@ -144,7 +149,3 @@ const interpretList = (inputs, context) => {
 
 const FILE_PATH = `${FILE_DIR}/print.txt`;
 const input = fs.readFileSync(FILE_PATH, "utf-8");
-const tokens = parse(input);
-console.log(tokens);
-const output = interpretList(tokens);
-console.log(output)
