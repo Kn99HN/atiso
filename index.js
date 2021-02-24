@@ -1,4 +1,5 @@
 const fs = require("fs");
+const { allowedNodeEnvironmentFlags } = require("process");
 const FILE_DIR = "./tests";
 
 class Context {
@@ -19,26 +20,26 @@ class Context {
 const tokenize = (input) => {
   const tokens = [];
   const spacedInput = input.replace(/\(/g, "( ").replace(/\)/g, " )");
-  let currentWord = '';
+  let currentWord = "";
   let isString = false;
   for (char of spacedInput) {
     if (char === '"') {
       if (currentWord.indexOf(char) === 0) {
         currentWord += '"';
         isString = false;
-        if(currentWord !== '') {
-          tokens.push(currentWord)
-        };
-        currentWord = '';
+        if (currentWord !== "") {
+          tokens.push(currentWord);
+        }
+        currentWord = "";
       } else {
         currentWord = '"';
         isString = true;
       }
     } else if (!isString && char === " ") {
-      if(currentWord !== '') {
-        tokens.push(currentWord)
-      };
-      currentWord = '';
+      if (currentWord !== "") {
+        tokens.push(currentWord);
+      }
+      currentWord = "";
     } else if (char === "(" || char === ")") {
       tokens.push(char);
     } else {
@@ -122,6 +123,26 @@ const library = {
   "-": (...args) => args.reduce((acc, curr) => acc - curr),
   "*": (...args) => args.reduce((acc, curr) => acc * curr, 1),
   "/": (...args) => args.reduce((acc, curr) => acc / curr),
+  "=": (a, b) => a > b,
+  "/=": (a, b) => !a != b,
+  "<": (a, b) => a < b,
+  ">": (a, b) => a > b,
+  "<=": (a, b) => a <= b,
+  ">=": (a, b) => a >= b,
+  and: (...args) => {
+    return args.every(arg === "nil") ? args.pop() : null;
+  },
+  or: (...args) => {
+    for (arg in args) {
+      if (arg !== "nil") {
+        return arg;
+      }
+    }
+    return null;
+  },
+  not: (a) => {
+    return a === "nil" ? "T" : "nil";
+  },
   first: (...args) => args[0],
   rest: (...args) => args.shift(),
   print: (ls) => console.log(ls),
@@ -150,6 +171,13 @@ const special = {
       return interpret(inputs[2], new Context(lambdaScope, context));
     };
   },
+  if: (inputs, context) => {
+    if (interpret(inputs[1], context)) {
+      return interpret(inputs[2], context);
+    } else {
+      return interpret(inputs[3], context);
+    }
+  },
 };
 
 const interpretList = (inputs, context) => {
@@ -168,6 +196,8 @@ const interpretList = (inputs, context) => {
   }
 };
 
-const FILE_PATH = `${FILE_DIR}/subtract.txt`;
+const FILE_PATH = `${FILE_DIR}/if.txt`;
 const input = fs.readFileSync(FILE_PATH, "utf-8");
-console.log(interpretList(parse(input)));
+const parsedInput = parse(input);
+const output = interpretList(parsedInput);
+console.log(output);
