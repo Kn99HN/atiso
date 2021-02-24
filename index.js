@@ -6,7 +6,7 @@ class Context {
     this.scope = scope;
     this.parent = parent;
 
-    this.get = function(identifier) {
+    this.get = function (identifier) {
       if (identifier in this.scope) {
         return this.scope[identifier];
       } else if (this.parent !== undefined) {
@@ -18,13 +18,35 @@ class Context {
 
 const tokenize = (input) => {
   // not currently working with space -> think about this more
-  console.log(input.replace(/\(/g, "(\t")
-  .replace(/\)/g, "\t)")
-  .replace(/(?<=")/g, "\t"))
-  return input
-    .replace(/\(/g, "( ")
-    .replace(/\)/g, " )")
-    .split(" ");
+  const tokens = [];
+  const spacedInput = input.replace(/\(/g, "( ").replace(/\)/g, " )");
+  let currentWord = '';
+  let isString = false;
+  for (char of spacedInput) {
+    if (char === '"') {
+      if (currentWord.indexOf(char) === 0) {
+        currentWord += '"';
+        isString = false;
+        if(currentWord !== '') {
+          tokens.push(currentWord)
+        };
+        currentWord = '';
+      } else {
+        currentWord = '"';
+        isString = true;
+      }
+    } else if (!isString && char === " ") {
+      if(currentWord !== '') {
+        tokens.push(currentWord)
+      };
+      currentWord = '';
+    } else if (char === "(" || char === ")") {
+      tokens.push(char);
+    } else {
+      currentWord += char;
+    }
+  }
+  return tokens;
 };
 
 const convert = (input) => {
@@ -97,10 +119,10 @@ const parse = (input) => {
 };
 
 const library = {
-  '+': (...args) => {
+  "+": (...args) => {
     return args.reduce((acc, curr) => acc + curr, 0);
   },
-  first: (ls) => ls[0],
+  first: (...args) => args[0],
   rest: (ls) => ls.shift(),
   print: (ls) => console.log(ls),
 };
@@ -134,7 +156,7 @@ const interpretList = (inputs, context) => {
   if (inputs.length > 0 && inputs[0].value in special) {
     return special[inputs[0].value](inputs, context);
   } else {
-    const interpretedInputs = inputs.map(function(x) {
+    const interpretedInputs = inputs.map(function (x) {
       return interpret(x, context);
     });
     if (interpretedInputs[0] instanceof Function) {
@@ -146,6 +168,6 @@ const interpretList = (inputs, context) => {
   }
 };
 
-
-const FILE_PATH = `${FILE_DIR}/print.txt`;
+const FILE_PATH = `${FILE_DIR}/first.txt`;
 const input = fs.readFileSync(FILE_PATH, "utf-8");
+const tokens = tokenize(input);
