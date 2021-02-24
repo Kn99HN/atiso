@@ -1,7 +1,21 @@
 const fs = require("fs");
+const { get } = require("http");
 const FILE_PATH = "./input.txt";
 
 const input = fs.readFileSync(FILE_PATH, "utf-8");
+
+const Context = function (scope, parent) {
+  this.scope = scope;
+  this.parent = parent;
+
+  this.get = (identifier) => {
+    if (identifier in this.scope) {
+      return this.scope[identifier];
+    } else if (this.parent !== undefined) {
+      return this.parent.get(undefined);
+    }
+  }
+};
 
 const tokenize = (input) => {
   return input
@@ -11,12 +25,12 @@ const tokenize = (input) => {
 };
 
 const convert = (input) => {
-  if (typeof input === "number") {
+  if (!isNaN(parseFloat(input))) {
     return {
       type: "Literal",
-      value: input,
+      value: parseFloat(input),
     };
-  } else if (typeof input === "string") {
+  } else if (input.indexOf('"') !== input.indexOf('"')) {
     return {
       type: "Literal",
       value: input,
@@ -24,7 +38,7 @@ const convert = (input) => {
   } else {
     return {
       type: "Identifier",
-      value: intput,
+      value: input,
     };
   }
 };
@@ -34,7 +48,6 @@ const convert = (input) => {
 //   { type: 'identifier', value: 'x' }],
 //   { type: 'literal', value: 'Lisp' }]
 const parenthesize = (tokens, ls = undefined) => {
-  // console.log(tokens[idx], ls);
   if (ls === undefined) {
     return parenthesize(tokens, []);
   } else {
@@ -57,7 +70,7 @@ const parenthesize = (tokens, ls = undefined) => {
 const prettyPrint = (parenthesizedTokens, idx = 0, currentString = "") => {
   if (parenthesizedTokens[idx] === undefined) {
     return currentString + "]";
-  } else if (Array.isArray(parenthesizedTokens[idx])) {
+  } else if (parenthesizedTokens[idx] instanceof Array) {
     currentString += idx === 0 ? "[ [" : "],\n[";
     currentString = prettyPrint(parenthesizedTokens[idx], 0, currentString);
     currentString = prettyPrint(parenthesizedTokens, idx + 1, currentString);
@@ -80,13 +93,35 @@ const parse = (input) => {
   return parenthesize(tokenize(input));
 };
 
-const evaluate = (fn) => {
-  if (fn === "+") {
-    return (a, b) => a + b;
-  } else if (fn === "first") {
-    return (ls) => ls[0];
+const library = {
+  '+': (a, b) => a + b,
+  'first': (ls) => ls[0],
+  'rest': (ls) => ls.shift(),
+  'print': (ls) => console.log(ls)
+};
+
+const interpret = (input, context) => {
+  if (context === undefined) {
+    return interpret(input, new Context(library));
+  } else if(input instanceof Array) {
+    return interpretList(input, context);
+  } else if(input.type === 'Identifier') {
+    return context.get(input.value);
+  } else {
+    return input.value;
   }
 };
 
-const parsedTokens = parse(input);
-console.log(parsedTokens);
+const interpretList = (inputs, context) => {
+  if(inputs[0] === 'lambda') {
+    return interpretList(inputs, new Context(library));
+  } else {
+    const interpretedInputs = inputs.map((x) => interpret(x, context));
+    if(interpretedInputs[0] instanceof Function) {
+      const func = interpretedInputs[0];
+      return func(interpretedInputs.slice(1));
+    } else {
+      return interpretedInputs;
+    }
+  }
+}
