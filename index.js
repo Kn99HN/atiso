@@ -1,21 +1,22 @@
 const fs = require("fs");
-const { get } = require("http");
-const FILE_PATH = "./input.txt";
+const FILE_PATH = ".test/add.txt";
 
 const input = fs.readFileSync(FILE_PATH, "utf-8");
 
-const Context = function (scope, parent) {
-  this.scope = scope;
-  this.parent = parent;
+class Context {
+  constructor(scope, parent) {
+    this.scope = scope;
+    this.parent = parent;
 
-  this.get = (identifier) => {
-    if (identifier in this.scope) {
-      return this.scope[identifier];
-    } else if (this.parent !== undefined) {
-      return this.parent.get(undefined);
-    }
+    this.get = (identifier) => {
+      if (identifier in this.scope) {
+        return this.scope[identifier];
+      } else if (this.parent !== undefined) {
+        return this.parent.get(undefined);
+      }
+    };
   }
-};
+}
 
 const tokenize = (input) => {
   return input
@@ -30,7 +31,7 @@ const convert = (input) => {
       type: "Literal",
       value: parseFloat(input),
     };
-  } else if (input.indexOf('"') !== input.indexOf('"')) {
+  } else if (input.indexOf('"') !== input.lastIndexOf('"')) {
     return {
       type: "Literal",
       value: input,
@@ -94,34 +95,49 @@ const parse = (input) => {
 };
 
 const library = {
-  '+': (a, b) => a + b,
-  'first': (ls) => ls[0],
-  'rest': (ls) => ls.shift(),
-  'print': (ls) => console.log(ls)
+  "+": (args) => {
+    return args.reduce((acc, curr) => acc + curr, 0);
+  },
+  first: (ls) => ls[0],
+  rest: (ls) => ls.shift(),
+  print: (ls) => console.log(ls),
 };
 
 const interpret = (input, context) => {
   if (context === undefined) {
     return interpret(input, new Context(library));
-  } else if(input instanceof Array) {
+  } else if (input instanceof Array) {
     return interpretList(input, context);
-  } else if(input.type === 'Identifier') {
+  } else if (input.type === "Identifier") {
     return context.get(input.value);
   } else {
     return input.value;
   }
 };
 
+const special = {
+  lambda: (inputs, context) => {
+    return function () {
+      const lambdaArgs = arguments;
+      const lambdaScope = inputs[1].reduce(function (acc, x, i) {
+        acc[x.value] = lambdaArgs[i];
+        return acc;
+      }, {});
+      return interpret(inputs[2], new Context(lambdaScope, context));
+    };
+  },
+};
+
 const interpretList = (inputs, context) => {
-  if(inputs[0] === 'lambda') {
-    return interpretList(inputs, new Context(library));
+  if (inputs.length > 0 && inputs[0].value in special) {
+    return special[inputs[0].value](inputs, context);
   } else {
     const interpretedInputs = inputs.map((x) => interpret(x, context));
-    if(interpretedInputs[0] instanceof Function) {
+    if (interpretedInputs[0] instanceof Function) {
       const func = interpretedInputs[0];
       return func(interpretedInputs.slice(1));
     } else {
       return interpretedInputs;
     }
   }
-}
+};
