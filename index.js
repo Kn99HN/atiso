@@ -1,7 +1,5 @@
 const fs = require("fs");
-const FILE_PATH = ".test/add.txt";
-
-const input = fs.readFileSync(FILE_PATH, "utf-8");
+const FILE_DIR = "./test";
 
 class Context {
   constructor(scope, parent) {
@@ -19,6 +17,7 @@ class Context {
 }
 
 const tokenize = (input) => {
+  // not currently working with space -> think about this more
   return input
     .replace(/(?<=[(])/g, " ")
     .replace(/(?=[)])/g, " ")
@@ -141,3 +140,11 @@ const interpretList = (inputs, context) => {
     }
   }
 };
+
+
+const FILE_PATH = `${FILE_DIR}/print.txt`;
+const input = fs.readFileSync(FILE_PATH, "utf-8");
+const tokens = parse(input);
+console.log(tokens);
+const output = interpretList(tokens);
+console.log(output)

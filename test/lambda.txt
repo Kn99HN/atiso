@@ -1,2 +1,1 @@
-((lambda (x) x) "Lisp")
-Lisp
+((lambda (a b) a b) "Emacs" "Lisp")
