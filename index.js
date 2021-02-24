@@ -33,21 +33,24 @@ const convert = (input) => {
 // [[{ type: 'identifier', value: 'lambda' }, [{ type: 'identifier', value: 'x' }],
 //   { type: 'identifier', value: 'x' }],
 //   { type: 'literal', value: 'Lisp' }]
-const parenthesize = (tokens, ls = undefined, idx = 0) => {
-  if (tokens === undefined || idx >= tokens.length) {
-    return ls;
-  } else if (tokens[idx] === ")") {
-    return parenthesize(tokens, ls, idx + 1);
-  } else if (tokens[idx] === "(") {
-    const list = parenthesize(tokens, [], idx + 1);
-    if (!ls) {
-      return list;
-    }
-    ls.push(list);
-    return ls;
+const parenthesize = (tokens, ls = undefined) => {
+  // console.log(tokens[idx], ls);
+  if (ls === undefined) {
+    return parenthesize(tokens, []);
   } else {
-    ls.push(convert(tokens[idx]));
-    return parenthesize(tokens, ls, idx + 1);
+    const token = tokens.shift();
+    if (token === undefined) {
+      return ls.pop();
+    } else if (token === ")") {
+      return ls;
+    } else if (token === "(") {
+      const list = parenthesize(tokens, []);
+      ls.push(list);
+      return parenthesize(tokens, ls);
+    } else {
+      ls.push(convert(token));
+      return parenthesize(tokens, ls);
+    }
   }
 };
 
@@ -74,11 +77,16 @@ const prettyPrint = (parenthesizedTokens, idx = 0, currentString = "") => {
 };
 
 const parse = (input) => {
-    return parenthesize(tokenize(input));
-}
+  return parenthesize(tokenize(input));
+};
+
+const evaluate = (fn) => {
+  if (fn === "+") {
+    return (a, b) => a + b;
+  } else if (fn === "first") {
+    return (ls) => ls[0];
+  }
+};
 
 const parsedTokens = parse(input);
 console.log(parsedTokens);
-
-
-
