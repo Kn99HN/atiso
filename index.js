@@ -1,5 +1,5 @@
 const fs = require("fs");
-const FILE_DIR = "./test";
+const FILE_DIR = "./tests";
 
 class Context {
   constructor(scope, parent) {
@@ -17,7 +17,6 @@ class Context {
 }
 
 const tokenize = (input) => {
-  // not currently working with space -> think about this more
   const tokens = [];
   const spacedInput = input.replace(/\(/g, "( ").replace(/\)/g, " )");
   let currentWord = '';
@@ -119,11 +118,12 @@ const parse = (input) => {
 };
 
 const library = {
-  "+": (...args) => {
-    return args.reduce((acc, curr) => acc + curr, 0);
-  },
+  "+": (...args) => args.reduce((acc, curr) => acc + curr, 0),
+  "-": (...args) => args.reduce((acc, curr) => acc - curr),
+  "*": (...args) => args.reduce((acc, curr) => acc * curr, 1),
+  "/": (...args) => args.reduce((acc, curr) => acc / curr),
   first: (...args) => args[0],
-  rest: (ls) => ls.shift(),
+  rest: (...args) => args.shift(),
   print: (ls) => console.log(ls),
 };
 
@@ -168,6 +168,6 @@ const interpretList = (inputs, context) => {
   }
 };
 
-const FILE_PATH = `${FILE_DIR}/first.txt`;
+const FILE_PATH = `${FILE_DIR}/subtract.txt`;
 const input = fs.readFileSync(FILE_PATH, "utf-8");
-const tokens = tokenize(input);
+console.log(interpretList(parse(input)));
