@@ -1,21 +1,5 @@
-const fs = require("fs");
-const { allowedNodeEnvironmentFlags } = require("process");
-const FILE_DIR = "./tests";
-
-class Context {
-  constructor(scope, parent) {
-    this.scope = scope;
-    this.parent = parent;
-
-    this.get = function (identifier) {
-      if (identifier in this.scope) {
-        return this.scope[identifier];
-      } else if (this.parent !== undefined) {
-        return this.parent.get(identifier);
-      }
-    };
-  }
-}
+const { Context } = require("./Context.js");
+const { readFile } = require("./util.js");
 
 const tokenize = (input) => {
   const tokens = [];
@@ -179,13 +163,13 @@ const special = {
     }
   },
   cond: (inputs, context) => {
-    for(let i = 1; i < inputs.length; i += 2) {
-      if(interpret(inputs[i], context)) {
+    for (let i = 1; i < inputs.length; i += 2) {
+      if (interpret(inputs[i], context)) {
         return interpret(inputs[i + 1], context);
       }
     }
     return null;
-  }
+  },
 };
 
 const interpretList = (inputs, context) => {
@@ -204,8 +188,7 @@ const interpretList = (inputs, context) => {
   }
 };
 
-const FILE_PATH = `${FILE_DIR}/cond.txt`;
-const input = fs.readFileSync(FILE_PATH, "utf-8");
+const input = readFile("cond.txt");
 const parsedInput = parse(input);
 const output = interpretList(parsedInput);
 console.log(output);
