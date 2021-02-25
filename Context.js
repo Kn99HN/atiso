@@ -13,5 +13,5 @@ class Context {
 }
 
 module.exports = {
-    Context
-}
+  Context,
+};

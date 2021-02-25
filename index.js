@@ -33,6 +33,11 @@ const tokenize = (input) => {
   return tokens;
 };
 
+const tokenizeLs = (input) => {
+  const modifiedInputs = input.split("\n");
+  return modifiedInputs.map((input) => tokenize(input));
+}
+
 const convert = (input) => {
   if (!isNaN(parseFloat(input))) {
     return {
@@ -98,8 +103,9 @@ const prettyPrint = (parenthesizedTokens, idx = 0, currentString = "") => {
   }
 };
 
-const parse = (input) => {
-  return parenthesize(tokenize(input));
+const parse = (inputs) => {
+  const tokens = tokenize(inputs);
+  return parenthesize(tokens);
 };
 
 const library = {
@@ -170,11 +176,17 @@ const special = {
     }
     return null;
   },
+  setq: (inputs, context) => {
+    // what to do with setq?
+    console.log(inputs);
+  }
 };
 
 const interpretList = (inputs, context) => {
   if (inputs.length > 0 && inputs[0].value in special) {
-    return special[inputs[0].value](inputs, context);
+    const val = special[inputs[0].value](inputs, context);
+    console.log(context);
+    return val;
   } else {
     const interpretedInputs = inputs.map(function (x) {
       return interpret(x, context);
@@ -188,7 +200,8 @@ const interpretList = (inputs, context) => {
   }
 };
 
-const input = readFile("cond.txt");
+const input = readFile("setq.txt");
 const parsedInput = parse(input);
+console.log(parsedInput);
 const output = interpretList(parsedInput);
 console.log(output);
