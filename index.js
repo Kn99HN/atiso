@@ -135,13 +135,13 @@ const library = {
   or: (...args) => {
     for (arg in args) {
       if (arg !== "nil") {
-        return arg;
+        return true;
       }
     }
-    return null;
+    return false;
   },
   not: (a) => {
-    return a === "nil" ? "T" : "nil";
+    return a === "nil" ? true : false;
   },
   first: (...args) => args[0],
   rest: (...args) => args.shift(),
@@ -178,6 +178,14 @@ const special = {
       return interpret(inputs[3], context);
     }
   },
+  cond: (inputs, context) => {
+    for(let i = 1; i < inputs.length; i += 2) {
+      if(interpret(inputs[i], context)) {
+        return interpret(inputs[i + 1], context);
+      }
+    }
+    return null;
+  }
 };
 
 const interpretList = (inputs, context) => {
@@ -196,7 +204,7 @@ const interpretList = (inputs, context) => {
   }
 };
 
-const FILE_PATH = `${FILE_DIR}/if.txt`;
+const FILE_PATH = `${FILE_DIR}/cond.txt`;
 const input = fs.readFileSync(FILE_PATH, "utf-8");
 const parsedInput = parse(input);
 const output = interpretList(parsedInput);
