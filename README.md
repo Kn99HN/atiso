@@ -1,6 +1,6 @@
 # atiso
 
-My tini attempt at writing parser for subset of lisp.
+My tini parser for subset of lisp.
 
 # To Do
 - Support conditions
